@@ -1,0 +1,41 @@
+{
+  "name": "@waflow/api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "npm run build && concurrently -k \"tsc -p tsconfig.json --watch\" \"node --watch dist/main.js\"",
+    "start": "node dist/main.js",
+    "db:migrate": "tsx src/migrate.ts",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.0",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "knex": "^3.1.0",
+    "multer": "2.5.0",
+    "mysql2": "^3.14.0",
+    "nodemailer": "^10.2.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^11.0.0",
+    "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.0",
+    "@types/node": "^24.0.0",
+    "@types/nodemailer": "^7.0.0",
+    "@types/supertest": "^6.0.0",
+    "supertest": "^7.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.7.0"
+  }
+}

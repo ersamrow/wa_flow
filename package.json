@@ -1,0 +1,34 @@
+{
+  "name": "waflow",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"npm run dev -w @waflow/api\" \"npm run dev -w @waflow/web\"",
+    "build": "npm run build -w @waflow/api && npm run build -w @waflow/web",
+    "build:api": "npm run build -w @waflow/api",
+    "build:web": "npm run build -w @waflow/web",
+    "start:api": "npm run start -w @waflow/api",
+    "start:web": "npm run start -w @waflow/web",
+    "db:migrate": "npm run db:migrate -w @waflow/api",
+    "test": "npm run test -w @waflow/api",
+    "test:signup-ui": "node --test tests/facebook-signup.test.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "typescript": "^5.7.0"
+  },
+  "overrides": {
+    "multer": "$multer",
+    "@nestjs/platform-express": {
+      "multer": "2.5.0"
+    }
+  },
+  "dependencies": {
+    "multer": "2.5.0",
+    "@nestjs/platform-express": "^11.2.8"
+  }
+}

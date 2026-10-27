@@ -1,0 +1,79 @@
+# WaFlow — Next.js + NestJS
+
+The default application now runs natively on Next.js 16 (React 19 App Router) and NestJS 11 with TypeScript. The existing MySQL schema, accounts, business memberships, records, and encrypted provider credentials are preserved. The Node runtime does not proxy requests to Laravel or require PHP.
+
+## Install and run
+
+Use Node.js 22.12+ or Node.js 24 and the existing MySQL database.
+
+```powershell
+npm ci
+```
+
+Copy `backend/.env.example` to `backend/.env` and fill in the existing database and provider settings. Preserve the exact existing `APP_KEY`: changing it makes saved WhatsApp credentials unreadable. For local development, set `NODE_ENV=development`, `APP_URL=http://127.0.0.1:3000`, and `SESSION_SECURE_COOKIE=false`. Production uses the public HTTPS origin and secure cookies. `APP_URL` must match the browser origin for CSRF checks. Never put secrets in `NEXT_PUBLIC_*` variables.
+
+The API reads its configuration from `backend/.env`; explicit process values take precedence. The web app's optional `API_INTERNAL_URL` defaults to `http://127.0.0.1:4000`; set it before building if the API lives elsewhere.
+
+```powershell
+npm run db:migrate
+npm run dev
+```
+
+Open `http://127.0.0.1:3000/app/`. Next serves the UI on port 3000 and forwards `/api/v1/*` to Nest on port 4000. Nest's development command compiles TypeScript before Node runs it so dependency-injection metadata is available.
+
+The additive migration verifies the existing schema and creates only `node_sessions` and `node_jobs`. It does not reset, rename, or delete application tables. This conversion targets the existing database; provisioning a fresh database requires restoring its complete schema first.
+
+## Preserved application features
+
+- All nine workspace pages, both themes, responsive sidebar/header, forms, dropdowns, and dashboard charts.
+- Registration creates the business and owner membership transactionally. Existing Laravel bcrypt passwords remain valid; users sign in again because Node sessions use a separate cookie and table.
+- Login/logout, Remember me, password reset, local-only demo workspaces, and CSRF protection. SMTP configuration is required for reset emails.
+- Tenant-scoped customers, products, automations, knowledge, campaign drafts, inbox notes, assignment, status, and human/AI handling.
+- Native WhatsApp manual connection, Facebook Embedded Signup, approved templates, signed webhooks, queued replies, delivery updates, and the 24-hour reply window.
+- Native AI source validation, keyword automations, usage reservations, human handover, and recovery.
+- Native Razorpay checkout, subscription verification/sync/cancellation/reconciliation, signed webhooks, payment history, and server-owned plan limits.
+
+Existing `/api/v1` URLs and JSON response shapes are retained for the UI. Webhook paths remain `/api/v1/webhooks/whatsapp`, tenant-specific `/api/v1/webhooks/whatsapp/{key}`, and `/api/v1/webhooks/razorpay`. Meta configuration must allow the deployed HTTPS origin.
+
+## Cutover and deployment
+
+1. Back up MySQL and save the existing `APP_KEY` and provider configuration.
+2. Stop accepting writes on the old deployment, drain or review Laravel queued jobs and uncertain provider sends, then stop its web/queue/scheduler processes. Node intentionally does not deserialize PHP jobs. Do not run both provider workers during cutover.
+3. Install dependencies, configure the API environment, and run `npm run db:migrate`.
+4. Build with `npm run build` and start supervised processes with `npm run start:api` and `npm run start:web`.
+5. Route your HTTPS domain to Next and forward `/api/v1/*` to Nest while preserving the original request body, host, and forwarded HTTPS scheme. Keep API ports private. If a trusted loopback proxy terminates TLS, set `TRUST_PROXY=true`; do not trust arbitrary public forwarded headers.
+6. Set `NODE_ENV=production`, `SESSION_SECURE_COOKIE=true`, a strong `NODE_SESSION_SECRET`, and the real `APP_URL`. Use the unchanged `APP_KEY` for credential compatibility.
+7. Set `NODE_WORKER_ENABLED=true` to process durable Node jobs and scheduled recovery/cleanup. Interrupted sends are marked uncertain rather than automatically resent; review them in Meta.
+8. Verify login, existing workspace data, real provider onboarding, inbound messages, outgoing replies, billing webhooks, SMTP, backups, and monitoring before allowing customer traffic.
+
+Next's build prepares a standalone deployment including static assets. `start:web` runs that generated server. Configure `HOSTNAME`/`PORT` if needed; defaults are loopback and port 3000. The Nest listener defaults to loopback and `API_PORT=4000`.
+
+## Verification
+
+```powershell
+npm test
+npm run test:signup-ui
+npm run build
+```
+
+The optional native API smoke test uses an already running API and creates no application records:
+
+```powershell
+$env:RUN_API_SMOKE='true'
+npm test
+```
+
+Tests cover validation, tenant boundaries, Laravel bcrypt and encryption compatibility, password-reset session invalidation, raw webhook signatures, template restrictions, AI source validation, reply-window enforcement, and Graph transport ambiguity. Local API smoke tests additionally exercise MySQL-backed sessions, CSRF, and guest access. Live Meta/OpenAI/Razorpay calls and complete production transaction/concurrency parity still require acceptance testing; passing builds and unit tests do not establish that coverage.
+
+## Code map
+
+- `frontend/app/`: Next routes and layouts.
+- `frontend/features/workspace/`: preserved React workspace and provider UI.
+- `frontend/styles/workspace.css`: existing theme and responsive styles.
+- `backend/src/auth/`: native authentication and demo fixtures.
+- `backend/src/workspace/`: tenant-scoped workspace APIs.
+- `backend/src/providers/`: WhatsApp, AI, Razorpay, signup, and webhook processing.
+- `backend/src/common/`: MySQL, sessions, CSRF boundary, authenticated access, credential encryption, and durable job queue.
+- `backend/src/migrate.ts`: additive Node runtime-table migration.
+
+The PRD, API, and database design files remain the product blueprint. Campaign sending, unsupported media, team invitations, full-history pagination, and tax invoices were not implemented in the original application and are not added by this framework conversion.

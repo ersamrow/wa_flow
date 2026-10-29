@@ -48,7 +48,31 @@ Existing `/api/v1` URLs and JSON response shapes are retained for the UI. Webhoo
 
 Next's build prepares a standalone deployment including static assets. `start:web` runs that generated server. Configure `HOSTNAME`/`PORT` if needed; defaults are loopback and port 3000. The Nest listener defaults to loopback and `API_PORT=4000`.
 
-## Verification
+## Hostinger build configuration
+
+The production web build explicitly uses Webpack. This avoids the Turbopack
+PostCSS child-process crash shown in the Hostinger build log; it does not require
+removing Tailwind or changing application styles.
+
+For a deployment whose application root is `frontend`, use `npm run build`,
+output directory `.next`, and `npm start` as the start command. From the repository
+root, use `npm run build:web` and `npm run start:web`. Install workspace dependencies
+from the repository root with `npm ci`, including build-time dev dependencies.
+Use Node.js 22.12+ or 24.
+
+The web deployment alone does not run the API. Deploy and supervise the NestJS API
+separately using `npm run build:api` and `npm run start:api` from the repository
+root. Set `API_INTERNAL_URL` in the web build environment to an address reachable
+from the web server. Its loopback default works only when both processes share
+the same host. A changed API address requires rebuilding Next's rewrites.
+Keep database credentials and provider secrets in the API environment only.
+
+There are no Laravel PHP sources in the current tracked application. Keep
+`APP_KEY` and Laravel-compatible password/encryption handling: existing records
+still depend on them. The ignored `.local-backups` archive is a recovery backup,
+not part of the deployment.
+
+## Verification commands
 
 ```powershell
 npm test

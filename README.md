@@ -60,6 +60,13 @@ root, use `npm run build:web` and `npm run start:web`. Install workspace depende
 from the repository root with `npm ci`, including build-time dev dependencies.
 Use Node.js 22.12+ or 24.
 
+The frontend build traces dependencies from the repository root and copies shared
+standalone dependencies beside the generated `server.js`. This keeps `next` and
+React available when hosting publishes only the nested frontend server folder.
+The build fails if core runtime packages resolve outside that folder. For the
+Next.js hosting preset, keep application root `frontend`, build `npm run build`,
+and output `.next`.
+
 The web deployment alone does not run the API. Deploy and supervise the NestJS API
 separately using `npm run build:api` and `npm run start:api` from the repository
 root. Set `API_INTERNAL_URL` in the web build environment to an address reachable

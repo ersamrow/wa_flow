@@ -9,6 +9,7 @@ import { rateLimit } from 'express-rate-limit';
 import { timingSafeEqual } from 'node:crypto';
 import { CommonModule } from './common/common.module';
 import { DatabaseService } from './common/database.service';
+import { migrate } from './migrate';
 import { MysqlSessionStore } from './common/session.store';
 import { ApiExceptionFilter } from './common/exception.filter';
 import { AuthModule } from './auth/auth.module';
@@ -23,6 +24,8 @@ export async function bootstrap() {
   const secret=process.env.NODE_SESSION_SECRET||process.env.APP_KEY;
   if(!secret||secret.length<32)throw new Error('Configure NODE_SESSION_SECRET (at least 32 characters) and preserve APP_KEY.');
   const app=await NestFactory.create(AppModule,{rawBody:true});
+  // Opt-in for hosts without a shell: creates only node_sessions and node_jobs, and is safe to repeat.
+  if(process.env.AUTO_MIGRATE==='true')await migrate(app.get(DatabaseService));
   const express=app.getHttpAdapter().getInstance();
   express.disable('x-powered-by');
   if(process.env.TRUST_PROXY==='true')express.set('trust proxy','loopback');

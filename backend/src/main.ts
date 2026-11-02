@@ -16,7 +16,6 @@ import { AuthModule } from './auth/auth.module';
 import { WorkspaceModule } from './workspace/workspace.module';
 import { ProvidersModule } from './providers/providers.module';
 import type { AppRequest } from './common/request';
-import { migrate } from './migrate';
 
 @Module({ imports: [CommonModule, ProvidersModule, AuthModule, WorkspaceModule] })
 class AppModule {}
@@ -25,14 +24,12 @@ export async function bootstrap() {
   const secret=process.env.NODE_SESSION_SECRET||process.env.APP_KEY;
   if(!secret||secret.length<32)throw new Error('Configure NODE_SESSION_SECRET (at least 32 characters) and preserve APP_KEY.');
   // Run before Nest initializes workers or opens the HTTP listener.
-  if(process.env.DB_MIGRATE_ON_START==='true'){
+  if(process.env.DB_MIGRATE_ON_START==='true'||process.env.AUTO_MIGRATE==='true'){
     const database=new DatabaseService();
     try { await migrate(database); }
     finally { await database.onModuleDestroy(); }
   }
   const app=await NestFactory.create(AppModule,{rawBody:true});
-  // Opt-in for hosts without a shell: creates only node_sessions and node_jobs, and is safe to repeat.
-  if(process.env.AUTO_MIGRATE==='true')await migrate(app.get(DatabaseService));
   const express=app.getHttpAdapter().getInstance();
   express.disable('x-powered-by');
   if(process.env.TRUST_PROXY==='true')express.set('trust proxy','loopback');

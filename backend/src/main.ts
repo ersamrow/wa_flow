@@ -15,6 +15,7 @@ import { AuthModule } from './auth/auth.module';
 import { WorkspaceModule } from './workspace/workspace.module';
 import { ProvidersModule } from './providers/providers.module';
 import type { AppRequest } from './common/request';
+import { migrate } from './migrate';
 
 @Module({ imports: [CommonModule, ProvidersModule, AuthModule, WorkspaceModule] })
 class AppModule {}
@@ -22,6 +23,12 @@ class AppModule {}
 export async function bootstrap() {
   const secret=process.env.NODE_SESSION_SECRET||process.env.APP_KEY;
   if(!secret||secret.length<32)throw new Error('Configure NODE_SESSION_SECRET (at least 32 characters) and preserve APP_KEY.');
+  // Run before Nest initializes workers or opens the HTTP listener.
+  if(process.env.DB_MIGRATE_ON_START==='true'){
+    const database=new DatabaseService();
+    try { await migrate(database); }
+    finally { await database.onModuleDestroy(); }
+  }
   const app=await NestFactory.create(AppModule,{rawBody:true});
   const express=app.getHttpAdapter().getInstance();
   express.disable('x-powered-by');

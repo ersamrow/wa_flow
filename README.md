@@ -84,6 +84,27 @@ Use hosting environment variables for API secrets; `.env` files are not copied.
 Do not deploy `backend/dist` by itself: it contains only JavaScript and will fail
 with errors such as `Cannot find module 'dotenv'` without installed dependencies.
 
+If API logs report `ER_NO_SUCH_TABLE`, verify `DB_DATABASE` points to the existing
+application database. To run the migration automatically on every API deployment
+and restart, set `DB_MIGRATE_ON_START=true` in the backend hosting environment.
+Migration finishes before HTTP requests or background workers start; failures
+stop startup. It uses the same database settings as the API and skips existing
+runtime tables. It still requires the existing application schema; it cannot
+initialize an empty database. Leave the variable unset or false to migrate manually.
+
+For a manual migration, verify `DB_DATABASE` points to the existing
+application database and run the additive migration with the API's production
+environment variables. From the deployed `nodejs` directory with output under
+`dist`, run `node dist/backend/dist/migrate.js`. If the contents of the output
+folder are deployed directly, run `node backend/dist/migrate.js` instead. This
+checks the existing application schema and creates missing `node_sessions` and
+`node_jobs` tables; it does not provision a fresh application database.
+
+For a loopback reverse proxy, set `TRUST_PROXY=true` on the API deployment and
+restart it. The application maps this value to Express's `loopback` trust policy,
+not unrestricted proxy trust. If the proxy connects from another address, verify
+the hosting proxy topology before changing that policy.
+
 There are no Laravel PHP sources in the current tracked application. Keep
 `APP_KEY` and Laravel-compatible password/encryption handling: existing records
 still depend on them. The ignored `.local-backups` archive is a recovery backup,

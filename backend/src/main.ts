@@ -55,4 +55,4 @@ export async function bootstrap() {
   return app;
 }
 // Always start: hosting runtimes (Passenger/LiteSpeed) load this file via require(), so require.main is not this module.
-void bootstrap().catch(()=>{console.error('API startup failed. Check database, APP_KEY, and session configuration.');process.exitCode=1;});
+void bootstrap().catch((error)=>{console.error('API startup failed. Check database, APP_KEY, and session configuration.',error instanceof Error?error.message:error);process.exitCode=1;});

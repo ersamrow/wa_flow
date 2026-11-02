@@ -42,7 +42,12 @@ export async function bootstrap() {
     let originAllowed=true;
     if(origin){try{originAllowed=new URL(origin).origin===new URL(process.env.APP_URL||'http://localhost:3000').origin;}catch{originAllowed=false;}}
     const tokenBytes=Buffer.from(token),expectedBytes=Buffer.from(expected);
-    if(!originAllowed||!expected||tokenBytes.length!==expectedBytes.length||!timingSafeEqual(tokenBytes,expectedBytes))return res.status(419).json({message:'Your session expired. Refresh the page and try again.'});
+    const tokenValid=!!expected&&tokenBytes.length===expectedBytes.length&&timingSafeEqual(tokenBytes,expectedBytes);
+    if(!originAllowed||!tokenValid){
+      // Origins and token state are not secret; they show which check failed and what APP_URL resolved to.
+      console.warn(`CSRF rejected ${req.method} ${req.path}: origin=${origin??'none'} appUrl=${process.env.APP_URL??'unset'} originAllowed=${originAllowed} sessionToken=${expected?'present':'missing'} tokenMatch=${tokenValid}`);
+      return res.status(419).json({message:'Your session expired. Refresh the page and try again.'});
+    }
     next();
   });
   const limit=(max:number)=>rateLimit({windowMs:60000,max,standardHeaders:true,legacyHeaders:false,message:{message:'Too many requests. Please try again shortly.'}});

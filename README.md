@@ -67,6 +67,16 @@ from the web server. Its loopback default works only when both processes share
 the same host. A changed API address requires rebuilding Next's rewrites.
 Keep database credentials and provider secrets in the API environment only.
 
+For the API deployment, use the repository root as the application root, install
+with `npm ci` (including dev dependencies), build with `npm run build:api`, and
+select `dist` as the output directory. The build includes the compiled backend
+and its lockfile-pinned production dependencies inside that directory. If the
+host preserves the output folder, the entry is `dist/main.js`; if it deploys the
+contents of that folder as the application root, the entry is `main.js`.
+Use hosting environment variables for API secrets; `.env` files are not copied.
+Do not deploy `backend/dist` by itself: it contains only JavaScript and will fail
+with errors such as `Cannot find module 'dotenv'` without installed dependencies.
+
 There are no Laravel PHP sources in the current tracked application. Keep
 `APP_KEY` and Laravel-compatible password/encryption handling: existing records
 still depend on them. The ignored `.local-backups` archive is a recovery backup,

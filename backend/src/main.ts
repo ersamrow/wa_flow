@@ -51,7 +51,8 @@ export async function bootstrap() {
   app.use('/api/v1',limit(600));
   app.useGlobalFilters(new ApiExceptionFilter());
   app.enableShutdownHooks();
-  await app.listen(Number(process.env.API_PORT||4000),process.env.API_HOST||'127.0.0.1');
+  await app.listen(Number(process.env.API_PORT||process.env.PORT||4000),process.env.API_HOST||'127.0.0.1');
   return app;
 }
-if(require.main===module)void bootstrap().catch(()=>{console.error('API startup failed. Check database, APP_KEY, and session configuration.');process.exitCode=1;});
+// Always start: hosting runtimes (Passenger/LiteSpeed) load this file via require(), so require.main is not this module.
+void bootstrap().catch(()=>{console.error('API startup failed. Check database, APP_KEY, and session configuration.');process.exitCode=1;});

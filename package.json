@@ -8,8 +8,8 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n api,web \"npm run dev -w @waflow/api\" \"npm run dev -w @waflow/web\"",
-    "build": "npm run build -w @waflow/api && npm run build -w @waflow/web",
-    "build:api": "npm run build -w @waflow/api",
+    "build": "npm run build:api && npm run build:web",
+    "build:api": "npm run build -w @waflow/api && node scripts/api-entry.mjs",
     "build:web": "npm run build -w @waflow/web",
     "start:api": "npm run start -w @waflow/api",
     "start:web": "npm run start -w @waflow/web",

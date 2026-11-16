@@ -9,3 +9,9 @@ input[aria-invalid="true"], textarea[aria-invalid="true"], select[aria-invalid="
 .error-toast button { flex-shrink: 0; padding: 0 4px; border: 0; background: transparent; color: inherit; font-size: 22px; line-height: 1; cursor: pointer; }
 [data-theme="dark"] .error-toast { background: #351e24; color: #ffc2c9; }
 [data-theme="dark"] .field-error { color: #ff9da7; }
+
+.auth-success { padding: 12px 15px; border: 1px solid #84b99a; border-radius: 8px; background: #effaf3; color: #18603a; line-height: 1.6; }
+.success-toast { border-color: #84b99a; background: #effaf3; color: #18603a; }
+[data-theme="dark"] .success-toast, [data-theme="dark"] .auth-success { background: #183627; color: #b9f0ce; }
+.auth-form input[aria-invalid="true"] { border-color: #d33e45; box-shadow: 0 0 0 1px #d33e45; }
+.auth-form input[aria-invalid="true"]:focus { outline: 2px solid #d33e45; outline-offset: 2px; }

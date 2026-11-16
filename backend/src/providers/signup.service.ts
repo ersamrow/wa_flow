@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { randomBytes, randomInt } from "node:crypto";
 import { ProviderService } from "./provider.service";
 import { hash, same, requireThat, parseJson, Row } from "./helpers";
+import { signupExchangeError } from "./signup-error";
 @Injectable()
 export class SignupService {
     constructor(readonly provider: ProviderService) {
@@ -63,9 +64,11 @@ export class SignupService {
                 }),
                 signal: AbortSignal.timeout(20000)
             });
-            const data = await response.json();
-            const token = data.access_token;
-            requireThat(response.ok && typeof token === "string" && token, "Meta could not exchange the signup code. Connect again.");
+            const data = await response.json().catch(() => null);
+            const token = data?.access_token;
+            requireThat(response.ok && typeof token === "string" && token, signupExchangeError(data, response.status, [
+                process.env.WHATSAPP_APP_SECRET || "", d.code, typeof token === "string" ? token : ""
+            ]));
             const debug = await this.provider.graph(`${process.env.WHATSAPP_APP_ID}|${process.env.WHATSAPP_APP_SECRET}`, "GET", "debug_token", {
                 input_token: token
             });

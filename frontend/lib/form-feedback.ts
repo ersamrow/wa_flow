@@ -12,3 +12,7 @@ export function currentSubmittingForm() { return submittingForm; }
 export function reportError(message: string, errors: Record<string, string[]> = {}, form: HTMLFormElement | null = null) {
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('waflow:error', { detail: { message, errors, form } }));
 }
+
+export function reportSuccess(message: string) {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('waflow:success', { detail: { message } }));
+}

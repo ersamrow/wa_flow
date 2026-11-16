@@ -9,7 +9,7 @@ type FieldError = { control: Control; message: string; id: string; describedBy: 
 type Feedback = { message: string; errors: Record<string, string[]>; form: HTMLFormElement | null };
 
 export default function FormFeedback() {
-  const [toast, setToast] = useState<{ message: string; key: number } | null>(null);
+  const [toast, setToast] = useState<{ message: string; key: number; success?: boolean } | null>(null);
   const [fields, setFields] = useState<FieldError[]>([]);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function FormFeedback() {
     const error = (event: Event) => {
       const { message, errors, form } = (event as CustomEvent<Feedback>).detail;
       notify(message);
-      if (!form?.isConnected) return;
+      if (!form?.isConnected || form.dataset.managedValidation) return;
       clear(form);
       let first: Control | undefined;
       for (const [name, messages] of Object.entries(errors)) {
@@ -73,6 +73,8 @@ export default function FormFeedback() {
       }
       first?.focus();
     };
+    const success = (event: Event) => setToast({ message: (event as CustomEvent<{ message: string }>).detail.message, key: Date.now(), success: true });
+    window.addEventListener('waflow:success', success);
     document.addEventListener('submit', submit, true);
     document.addEventListener('invalid', invalid, true);
     document.addEventListener('input', input, true);
@@ -84,6 +86,7 @@ export default function FormFeedback() {
       document.removeEventListener('input', input, true);
       document.removeEventListener('change', input, true);
       window.removeEventListener('waflow:error', error);
+      window.removeEventListener('waflow:success', success);
       for (const entry of marked.values()) restore(entry);
     };
   }, []);
@@ -98,6 +101,6 @@ export default function FormFeedback() {
     {fields.filter(field => field.control.isConnected && field.control.parentElement).map(field => createPortal(
       <span className="field-error" id={field.id}>{field.message}</span>, field.control.parentElement!, field.id,
     ))}
-    {toast && createPortal(<div className="error-toast" role="alert" key={toast.key}><span>{toast.message}</span><button type="button" aria-label="Dismiss error notification" onClick={() => setToast(null)}>×</button></div>, document.querySelector('dialog[open]') || document.body)}
+    {toast && createPortal(<div className={`error-toast${toast.success ? " success-toast" : ""}`} role={toast.success ? "status" : "alert"} key={toast.key}><span>{toast.message}</span><button type="button" aria-label="Dismiss notification" onClick={() => setToast(null)}>×</button></div>, document.querySelector('dialog[open]') || document.body)}
   </>;
 }

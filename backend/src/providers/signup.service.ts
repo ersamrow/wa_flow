@@ -52,16 +52,16 @@ export class SignupService {
             updated_at: new Date()
         }), "This signup code was already submitted. Start a new connection if it failed.", 409);
         try {
-            const response = await fetch(`https://graph.facebook.com/${process.env.WHATSAPP_GRAPH_VERSION}/oauth/access_token`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: new URLSearchParams({
-                    client_id: process.env.WHATSAPP_APP_ID!,
-                    client_secret: process.env.WHATSAPP_APP_SECRET!,
-                    code: d.code
-                }),
+            // Use Meta's Embedded Signup exchange, not the manual OAuth redirect flow.
+            // FB.login manages the popup redirect; do not substitute the site's URL.
+            const url = new URL(`https://graph.facebook.com/${process.env.WHATSAPP_GRAPH_VERSION}/oauth/access_token`);
+            url.search = new URLSearchParams({
+                client_id: process.env.WHATSAPP_APP_ID!,
+                client_secret: process.env.WHATSAPP_APP_SECRET!,
+                code: d.code
+            }).toString();
+            const response = await fetch(url, {
+                method: "GET",
                 signal: AbortSignal.timeout(20000)
             });
             const data = await response.json().catch(() => null);

@@ -21,7 +21,8 @@ test('Embedded Signup uses the documented GET exchange and preserves Meta errors
     assert.equal(url.searchParams.get('code'), 'test-code');
     assert.ok(url.searchParams.has('client_id'));
     assert.ok(url.searchParams.has('client_secret'));
-    assert.equal(url.searchParams.has('redirect_uri'), false);
+    assert.equal(url.searchParams.has('redirect_uri'), true);
+    assert.equal(url.searchParams.get('redirect_uri'), '');
     return new Response(JSON.stringify({ error: {
       message: 'Redirect URI mismatch', type: 'OAuthException', code: 100, error_subcode: 36008,
     } }), { status: 400 });

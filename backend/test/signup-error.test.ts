@@ -13,6 +13,8 @@ test('signup exchange exposes Meta diagnostics without the raw response', () => 
     assert.ok(message.includes(detail));
   }
   assert.ok(!message.includes('private'));
+  assert.match(message, /WhatsApp Embedded Signup login variation/);
+  assert.match(message, /System-user access token/);
 });
 
 test('signup diagnostics redact credentials and authorization codes', () => {
@@ -23,6 +25,7 @@ test('signup diagnostics redact credentials and authorization codes', () => {
     assert.ok(!message.includes(secret));
   }
   assert.match(message, /\[redacted\]/);
+  assert.ok(!message.includes('System-user'));
 });
 
 test('missing or malformed Meta errors produce a useful fallback', () => {

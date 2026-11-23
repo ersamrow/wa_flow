@@ -52,15 +52,13 @@ export class SignupService {
             updated_at: new Date()
         }), "This signup code was already submitted. Start a new connection if it failed.", 409);
         try {
-            // Use Meta's Embedded Signup exchange, not the manual OAuth redirect flow.
-            // FB.login manages the relay redirect. Send the explicit empty URI used
-            // by Facebook's server SDK for JavaScript SDK code exchanges.
+            // Current Embedded Signup business-token exchange uses only app ID,
+            // app secret and code. The SDK owns its dynamic popup relay URI.
             const url = new URL(`https://graph.facebook.com/${process.env.WHATSAPP_GRAPH_VERSION}/oauth/access_token`);
             url.search = new URLSearchParams({
                 client_id: process.env.WHATSAPP_APP_ID!,
                 client_secret: process.env.WHATSAPP_APP_SECRET!,
-                code: d.code,
-                redirect_uri: ""
+                code: d.code
             }).toString();
             const response = await fetch(url, {
                 method: "GET",

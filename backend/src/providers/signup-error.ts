@@ -15,5 +15,8 @@ export function signupExchangeError(payload: unknown, status: number, secrets: s
     if (typeof error.code === "number") details.push(`code: ${error.code}`);
     if (typeof error.error_subcode === "number") details.push(`subcode: ${error.error_subcode}`);
     if (typeof error.fbtrace_id === "string") details.push(`trace: ${error.fbtrace_id}`);
-    return `Meta signup code exchange failed (HTTP ${status})${details.length ? `: ${redact(details.join("; "))}` : ": Meta returned no error details."} Start a new connection after correcting the issue.`;
+    const guidance = error.code === 100 && error.error_subcode === 36008
+        ? " Ask the platform owner to verify the Meta configuration uses the WhatsApp Embedded Signup login variation and System-user access token type. Confirm the settings page URL is allowed in Meta. Start a new connection after correcting the setup."
+        : " Start a new connection after correcting the issue.";
+    return `Meta signup code exchange failed (HTTP ${status})${details.length ? `: ${redact(details.join("; "))}` : ": Meta returned no error details."}${guidance}`;
 }
